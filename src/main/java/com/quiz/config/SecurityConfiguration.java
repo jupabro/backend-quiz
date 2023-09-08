@@ -24,7 +24,7 @@ public class SecurityConfiguration {  //bind the filter
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
              http
-                .csrf(AbstractHttpConfigurer::disable)// disables CSRF (Cross-Site Request Forgery) protection
+                .csrf(AbstractHttpConfigurer::disable) // disables CSRF (Cross-Site Request Forgery) protection
                         .authorizeHttpRequests((authz) -> authz
                              .requestMatchers("/api/v1/auth/**").permitAll() //whitelist, no auth required
                                 .anyRequest().authenticated()) //all other requests need auth

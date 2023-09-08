@@ -60,8 +60,8 @@ public class JwtService {
                 .builder()
                 .setClaims(extraClaims)
                 .setSubject(userDetails.getUsername()) //here its the user email
-                .setIssuedAt(new Date(System.currentTimeMillis())) //issue date of token
-                .setExpiration(new Date(System.currentTimeMillis() + expiration)) //expiration date
+                .setIssuedAt(new Date(System.currentTimeMillis())) //issue date of token: iat
+                .setExpiration(new Date(System.currentTimeMillis() + expiration)) //expiration date: exp
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
                 .compact(); //generate and return the token
     }
