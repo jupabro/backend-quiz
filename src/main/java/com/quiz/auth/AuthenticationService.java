@@ -1,59 +1,38 @@
 package com.quiz.auth;
 
-import com.quiz.config.JwtService;
-import com.quiz.user.Role;
+import com.quiz.exceptions.RegistrationException;
 import com.quiz.user.User;
 import com.quiz.user.UserRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.AuthenticationException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import java.util.Date;
+import java.util.Optional;
 
 @Service
-@RequiredArgsConstructor
-public class AuthenticationService {
-    private final UserRepository repository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtService jwtService;
-    private final AuthenticationManager authenticationManager;
 
-    public AuthenticationResponse register(RegisterRequest request) {
-        var user = User.builder()
-                .firstname(request.getFirstname())
-                .lastname(request.getLastname())
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .role(Role.USER)
-                .build();
-        repository.save(user);
-        var jwtToken = jwtService.generateToken(user);
-        return AuthenticationResponse.builder()
-                .token(jwtToken)
-                .build();
+public class AuthenticationService {
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    public User registerUser(User user) throws RegistrationException {
+        String email = user.getEmail();
+        Optional<User> userWithThatEmail = userRepository.findByEmail(email);
+
+        if (userWithThatEmail.isPresent()) {
+            throw new RegistrationException("User with the same email already exists");
+        }
+        String hashedPwd = passwordEncoder.encode(user.getPassword());
+        user.setPassword(hashedPwd);
+        user.setCreateDate(String.valueOf(new Date(System.currentTimeMillis())));
+        return userRepository.save(user);
     }
 
-    public AuthenticationResponse authenticate(AuthenticationRequest request) {
-        try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            request.getEmail(),
-                            request.getPassword()
-                    )
-            );
-
-            var user = repository.findByEmail(request.getEmail())
-                    .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-            var jwtToken = jwtService.generateToken(user);
-            return AuthenticationResponse.builder()
-                    .token(jwtToken)
-                    .build();
-        } catch (AuthenticationException e) {
-            throw new BadCredentialsException("Invalid password", e);
-        }
+    public User authenticateUser(String email)  throws UsernameNotFoundException{
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 }

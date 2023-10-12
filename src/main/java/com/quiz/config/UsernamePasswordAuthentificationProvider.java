@@ -11,9 +11,10 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
 
 import java.util.*;
-
+@Component
 public class UsernamePasswordAuthentificationProvider implements AuthenticationProvider {
 
     @Autowired
