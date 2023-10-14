@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.crypto.SecretKey;
@@ -20,31 +21,37 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
+@Component
 public class JWTTokenGeneratorFilter extends OncePerRequestFilter {
 
-    @Value("${application.security.jwt.secret-key}")
-    private String secretKey;
+    //TODO: why those values not possible to extract from properties file?
 
-    @Value("${application.security.header}")
+    @Value("${application.security.jwt.secret-key}")
+    private String tokenKey;
+
+    @Value("${application.security.jwt.header}")
     private String header;
     @Value("${application.security.jwt.expiration}")
     private long jwtExpiration;
 
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+
+        String tokenKey = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (null != authentication) {
-            SecretKey key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
+            SecretKey key = Keys.hmacShaKeyFor(tokenKey.getBytes(StandardCharsets.UTF_8));
             String jwt = Jwts.builder().setIssuer("Quizz App").setSubject("JWT Token")
                     .claim("username", authentication.getName())
                     .claim("authorities", populateAuthorities(authentication.getAuthorities()))
                     .setIssuedAt(new Date(System.currentTimeMillis())) //issue date of token: iat
-                    .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration)) //expiration date: exp
+                    .setExpiration(new Date(System.currentTimeMillis() + 86400000)) //expiration date: exp
                     .signWith(key).compact();
-            response.setHeader(header, jwt);
+            response.setHeader("Authorization", jwt);
         }
-
         filterChain.doFilter(request, response);
     }
 

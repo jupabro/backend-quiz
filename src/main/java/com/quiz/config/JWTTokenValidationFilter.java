@@ -7,6 +7,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.antlr.v4.runtime.misc.NotNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -24,17 +25,19 @@ public class JWTTokenValidationFilter  extends OncePerRequestFilter {
     @Value("${application.security.header}")
     private String header;
 
-    @Value("${application.security.jwt.secret-key}")
-    private String secretKey;
+    //@Value("${application.security.jwt.jwt-key}")
+    private String tokenKey = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        String jwt = request.getHeader(header);
+        String jwt = request.getHeader("JWT");
+        System.out.println("jwt" + jwt);
+
         if (null != jwt) {
             try {
                 SecretKey key = Keys.hmacShaKeyFor(
-                        secretKey.getBytes(StandardCharsets.UTF_8));
+                        tokenKey.getBytes(StandardCharsets.UTF_8));
 
                 Claims claims = Jwts.parserBuilder()
                         .setSigningKey(key)
